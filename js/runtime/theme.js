@@ -85,7 +85,7 @@ export function outlineText(ctx, text, x, y, size, color = '#ffffff', align = 'c
 
 /** 渐变按钮：金色主按钮 / 幽灵次按钮 */
 export function button(ctx, x, y, w, h, label, opts = {}) {
-  const { primary = true, fontSize = 44, glow = 0 } = opts;
+  const { primary = true, fontSize = 44, glow = 0, icon = 0 } = opts;
   const r = h / 2;
   ctx.save();
   if (glow > 0) {
@@ -121,14 +121,24 @@ export function button(ctx, x, y, w, h, label, opts = {}) {
     ctx.stroke();
   }
   ctx.font = `bold ${fontSize}px sans-serif`;
-  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   if (primary) {
     ctx.fillStyle = '#4a2a00';
   } else {
     ctx.fillStyle = '#dff1ff';
   }
-  ctx.fillText(label, x + w / 2, y + h / 2 + 2);
+  if (icon > 0) {
+    const gap = 18;
+    const textW = ctx.measureText(label).width;
+    const total = textW + gap + icon;
+    const startX = x + (w - total) / 2;
+    ctx.textAlign = 'left';
+    ctx.fillText(label, startX, y + h / 2 + 2);
+    videoIcon(ctx, startX + textW + gap + icon / 2, y + h / 2, icon);
+  } else {
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x + w / 2, y + h / 2 + 2);
+  }
   ctx.restore();
 }
 

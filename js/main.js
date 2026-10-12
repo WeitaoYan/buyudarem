@@ -6,12 +6,17 @@ import {
   GOLDEN_TIME_DURATION,
   SPRINT_TIME,
   POWERUP_CONFIG,
+  getStars,
+  getStarDisplay,
+  MAX_STARS,
 } from './config';
+import { formatScore } from './base/draw';
 import DataBus, { STATE_READY, STATE_PLAYING, STATE_RESULT } from './databus';
 import Background from './runtime/background';
 import UI from './runtime/ui';
 import AudioManager from './runtime/audio';
 import { showRewardedAd, pickOpeningBuff } from './runtime/ad';
+import { captureShareCard } from './runtime/sharecard';
 import Cannon from './game/cannon';
 import FishSpawner from './game/fishspawner';
 import ComboSystem from './game/combo';
@@ -162,11 +167,49 @@ export default class Main {
   }
 
   share() {
-    if (wx.shareAppMessage) {
-      wx.shareAppMessage({
-        title: `我在捕鱼达人拿了 ${GameGlobal.databus.score} 分，来挑战我！`,
+    if (!wx.shareAppMessage) return;
+    const db = GameGlobal.databus;
+    const stars = getStars(db.score);
+    const starDisplay = getStarDisplay(db.score);
+
+    const presets = [
+      {
+        title: `我在捕鱼达人拿了 ${formatScore(db.score)} 分，来挑战我！`,
+        variant: 'score',
+      },
+      {
+        title: `听说最高能到7颗星，我才拿了 ${stars} 颗，不服来战！`,
+        variant: 'stars',
+      },
+      {
+        title: `捕鱼达人我打出 ×${db.maxCombo} 连击，你能比我强吗？`,
+        variant: 'combo',
+      },
+      {
+        title: `黄金时刻双倍分，一局 ${formatScore(db.score)} 分等你来破！`,
+        variant: 'golden',
+      },
+      {
+        title: '听说最高能到7颗星，你能打到几颗？',
+        variant: 'stars',
+      },
+    ];
+
+    const preset = presets[Math.floor(Math.random() * presets.length)];
+    const imageData = {
+      score: db.score,
+      stars,
+      totalStars: preset.variant === 'stars' ? MAX_STARS : starDisplay.total,
+      maxCombo: db.maxCombo || 0,
+    };
+
+    captureShareCard(preset.variant, imageData)
+      .then((imageUrl) => {
+        wx.shareAppMessage({ title: preset.title, imageUrl });
+      })
+      .catch(() => {
+        wx.shareAppMessage({ title: preset.title });
       });
-    }
   }
 
   // ---------- 逻辑 ----------

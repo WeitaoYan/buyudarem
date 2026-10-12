@@ -24,7 +24,6 @@ import {
   trophyIcon,
   boltIcon,
   homeIcon,
-  videoIcon,
   waveLine,
   softGlow,
 } from './theme';
@@ -337,8 +336,8 @@ export default class UI {
     let yy = y;
     let rows = 1;
     for (const it of list) {
-      const text = `${it.cfg.name} ${it.left.toFixed(0)}s`;
-      const w = ctx.measureText(text).width + 84;
+      const text = `${it.left.toFixed(0)}s`;
+      const w = ctx.measureText(text).width + 74;
       if (x + w > VIEW_WIDTH - 40) {
         x = 40;
         yy += 56;
@@ -568,14 +567,8 @@ export default class UI {
     roundRect(ctx, btnX - 10 - pulse * 8, btnY - 10 - pulse * 8, btnW + 20 + pulse * 16, btnH + 20 + pulse * 16, (btnH + 20) / 2);
     ctx.stroke();
     ctx.restore();
-    button(ctx, btnX, btnY, btnW, btnH, '增强开始游戏', { primary: true, fontSize: 52, glow: 18 + pulse * 14 });
+    button(ctx, btnX, btnY, btnW, btnH, '增强开始游戏', { primary: true, fontSize: 52, glow: 18 + pulse * 14, icon: 46 });
     this.adStartBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
-
-    // 视频图标：暗示需要看广告
-    ctx.save();
-    ctx.globalAlpha = 0.75 + pulse * 0.25;
-    videoIcon(ctx, btnX + btnW + 52, btnY + btnH / 2, 58);
-    ctx.restore();
 
     // 跳过广告直接开始（无开局特效）
     ctx.save();
