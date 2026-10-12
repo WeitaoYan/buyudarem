@@ -65,6 +65,27 @@ function drawBolt(ctx, pts, width, color) {
   ctx.stroke();
 }
 
+// 四角星闪光（命中/捕获点缀）
+function drawSparkle(ctx, x, y, r, rot) {
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const rr = i % 2 === 0 ? r : r * 0.32;
+    const a = (Math.PI / 4) * i + rot;
+    const px = x + Math.cos(a) * rr;
+    const py = y + Math.sin(a) * rr;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function easeOutBack(x) {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+}
+
 /**
  * 特效层：捕获金币星星、飘字、升级光环、狂暴速度线、道具全屏动画
  */
@@ -85,66 +106,181 @@ export default class Effects {
     this.list.push(effect);
   }
 
-  // 命中火花（伤害数字已取消，避免小鱼刷屏）
+  // 命中火花：十字星闪 + 碎屑
   spawnHit(x, y) {
-    for (let i = 0; i < 4; i++) {
+    this.add({
+      kind: 'flash',
+      x,
+      y,
+      r: 16 + Math.random() * 8,
+      rot: Math.random() * Math.PI,
+      life: 0.22,
+      maxLife: 0.22,
+      color: '#eaf7ff',
+    });
+    for (let i = 0; i < 5; i++) {
       const a = Math.random() * Math.PI * 2;
-      const sp = 60 + Math.random() * 120;
+      const sp = 90 + Math.random() * 180;
       this.add({
         kind: 'spark',
         x,
         y,
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp,
-        r: 3 + Math.random() * 3,
-        life: 0.3,
-        maxLife: 0.3,
-        color: '#bfe9ff',
+        r: 2.5 + Math.random() * 3,
+        life: 0.32,
+        maxLife: 0.32,
+        color: Math.random() < 0.5 ? '#bfe9ff' : '#ffe9a8',
       });
     }
   }
 
-  // 捕获：金币星星上飘 + 分值弹跳
+  // 炮口冲击环
+  spawnMuzzle(x, y) {
+    this.add({
+      kind: 'ring',
+      x,
+      y,
+      r: 10,
+      maxR: 64,
+      life: 0.25,
+      maxLife: 0.25,
+      color: 'rgba(255,240,190,0.95)',
+      width: 7,
+    });
+  }
+
+  // 大字弹幕：连击里程碑 / 道具名 / 事件播报
+  spawnPopup(text, color = '#ffd76a', size = 64, y = VIEW_HEIGHT * 0.36) {
+    // 同屏只保留一条，避免刷屏
+    for (let i = this.list.length - 1; i >= 0; i--) {
+      if (this.list[i].kind === 'popup') this.list.splice(i, 1);
+    }
+    this.add({
+      kind: 'popup',
+      x: VIEW_WIDTH / 2,
+      y,
+      text,
+      color,
+      size,
+      life: 1.3,
+      maxLife: 1.3,
+    });
+  }
+
+  // 捕获：旋转金币 + 星星 + 冲击环 + 分值弹跳
   spawnCatch(fish, scoreGain) {
-    const count = Math.min(12, 4 + Math.floor(fish.cfg.score / 60));
+    const count = Math.min(14, 5 + Math.floor(fish.cfg.score / 50));
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
-      const sp = 80 + Math.random() * 160;
+      const sp = 90 + Math.random() * 200;
       this.add({
         kind: 'coin',
         x: fish.x,
         y: fish.y,
         vx: Math.cos(a) * sp,
-        vy: -120 - Math.random() * 120,
-        r: 5 + Math.random() * 5,
-        life: 0.7,
-        maxLife: 0.7,
+        vy: -140 - Math.random() * 160,
+        r: 6 + Math.random() * 6,
+        spin: Math.random() * Math.PI * 2,
+        spinSpeed: 6 + Math.random() * 8,
+        life: 0.8,
+        maxLife: 0.8,
       });
     }
+    // 星星点缀
+    for (let i = 0; i < 4; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 60 + Math.random() * 120;
+      this.add({
+        kind: 'sparkle',
+        x: fish.x,
+        y: fish.y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 60,
+        r: 8 + Math.random() * 8,
+        rot: Math.random() * Math.PI,
+        life: 0.55,
+        maxLife: 0.55,
+        color: '#fff3c4',
+      });
+    }
+    // 冲击环（大小按鱼分值）
+    const big = fish.isBoss || fish.cfg.score >= 300;
+    this.add({
+      kind: 'ring',
+      x: fish.x,
+      y: fish.y,
+      r: 12,
+      maxR: big ? 200 : 90,
+      life: 0.4,
+      maxLife: 0.4,
+      color: big ? 'rgba(255,215,106,0.95)' : 'rgba(190,235,255,0.8)',
+      width: big ? 9 : 5,
+    });
     this.add({
       kind: 'text',
       x: fish.x,
       y: fish.y,
-      vy: -90,
+      vy: -110,
       life: 0.9,
       maxLife: 0.9,
       text: `+${scoreGain}`,
-      color: '#ffe14d',
-      size: fish.isBoss ? 56 : 34,
+      color: fish.cfg.score >= 300 ? '#ffd76a' : '#ffe14d',
+      size: fish.isBoss ? 60 : fish.cfg.score >= 300 ? 44 : 34,
+      pop: true,
     });
-    if (fish.isBoss) {
+  }
+
+  // BOSS 击破庆祝：全屏闪 + 金币暴雨 + 大字
+  spawnBossKill(x, y, name, scoreGain) {
+    for (let i = 0; i < 3; i++) {
       this.add({
         kind: 'ring',
-        x: fish.x,
-        y: fish.y,
-        r: 20,
-        maxR: 220,
-        life: 0.7,
-        maxLife: 0.7,
-        color: 'rgba(255,225,77,0.9)',
-        width: 10,
+        x,
+        y,
+        r: 30 + i * 30,
+        maxR: 420 + i * 160,
+        life: 0.8 + i * 0.18,
+        maxLife: 0.8 + i * 0.18,
+        color: `rgba(255,215,106,${0.95 - i * 0.25})`,
+        width: 14 - i * 3,
       });
     }
+    for (let i = 0; i < 26; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 120 + Math.random() * 320;
+      this.add({
+        kind: 'coin',
+        x,
+        y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 200,
+        r: 7 + Math.random() * 7,
+        spin: Math.random() * Math.PI * 2,
+        spinSpeed: 6 + Math.random() * 8,
+        life: 1.1,
+        maxLife: 1.1,
+      });
+    }
+    this.add({
+      kind: 'flashbg',
+      life: 0.35,
+      maxLife: 0.35,
+      color: '255,240,190',
+    });
+    this.add({
+      kind: 'text',
+      x,
+      y: y - 40,
+      vy: -80,
+      life: 1.2,
+      maxLife: 1.2,
+      text: `+${scoreGain}`,
+      color: '#ffd76a',
+      size: 64,
+      pop: true,
+    });
+    this.spawnPopup(`${name} 击破!`, '#ffd76a', 76);
   }
 
   // 升级光环扩散
@@ -277,8 +413,12 @@ export default class Effects {
       }
       e.x += (e.vx || 0) * dt;
       e.y += (e.vy || 0) * dt;
-      if (e.kind === 'coin') e.vy += 480 * dt; // 重力，先上后下
+      if (e.kind === 'coin') {
+        e.vy += 520 * dt; // 重力，先上后下
+        e.spin += e.spinSpeed * dt;
+      }
       if (e.kind === 'spark') e.vy += 300 * dt;
+      if (e.kind === 'sparkle') e.vy += 200 * dt;
       if (e.kind === 'ring') {
         e.r += ((e.maxR - e.r) / (e.life / e.maxLife + 0.001)) * dt * 0.8;
       }
@@ -369,14 +509,60 @@ export default class Effects {
     for (const e of this.list) {
       const a = Math.max(0, Math.min(1, e.life / e.maxLife));
       if (e.kind === 'coin') {
+        // 翻转金币：横向压扁模拟旋转
+        const sx = Math.abs(Math.cos(e.spin || 0));
         ctx.globalAlpha = a;
-        ctx.fillStyle = '#ffd23f';
-        ctx.strokeStyle = '#ffae00';
-        ctx.lineWidth = 2;
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        ctx.scale(Math.max(0.25, sx), 1);
+        const g = ctx.createRadialGradient(-e.r * 0.3, -e.r * 0.35, e.r * 0.2, 0, 0, e.r);
+        g.addColorStop(0, '#fff3c4');
+        g.addColorStop(0.6, '#ffd23f');
+        g.addColorStop(1, '#e09b00');
+        ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+        ctx.arc(0, 0, e.r, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = '#a86e00';
+        ctx.lineWidth = 2;
         ctx.stroke();
+        ctx.restore();
+      } else if (e.kind === 'sparkle') {
+        ctx.globalAlpha = a;
+        ctx.fillStyle = e.color;
+        drawSparkle(ctx, e.x, e.y, e.r * (0.5 + a * 0.5), (e.rot || 0) + (1 - a) * 2);
+      } else if (e.kind === 'flash') {
+        // 命中十字星闪
+        const s = 1 + (1 - a) * 0.6;
+        ctx.globalAlpha = a;
+        ctx.fillStyle = e.color;
+        drawSparkle(ctx, e.x, e.y, e.r * s, e.rot || 0);
+        ctx.globalAlpha = a * 0.5;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r * 0.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (e.kind === 'flashbg') {
+        ctx.globalAlpha = a * 0.55;
+        ctx.fillStyle = `rgba(${e.color},1)`;
+        ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+      } else if (e.kind === 'popup') {
+        const t = 1 - a; // 0 → 1
+        const scale = t < 0.22 ? easeOutBack(t / 0.22) : 1;
+        const alpha = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        ctx.scale(scale, scale);
+        ctx.font = `bold ${e.size}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.lineWidth = Math.max(4, e.size * 0.12);
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(20,20,40,0.85)';
+        ctx.strokeText(e.text, 0, 0);
+        ctx.fillStyle = e.color;
+        ctx.fillText(e.text, 0, 0);
+        ctx.restore();
       } else if (e.kind === 'spark') {
         ctx.globalAlpha = a;
         ctx.fillStyle = e.color;
@@ -397,13 +583,22 @@ export default class Effects {
         drawBolt(ctx, e.bolt.pts, 3, '#ffffff');
       } else if (e.kind === 'text') {
         ctx.globalAlpha = a;
+        let sc = 1;
+        if (e.pop) {
+          const t = 1 - a;
+          sc = t < 0.25 ? 0.6 + easeOutBack(t / 0.25) * 0.6 : 1.15 - t * 0.15;
+        }
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        ctx.scale(sc, sc);
         ctx.font = `bold ${e.size}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.lineWidth = 5;
         ctx.strokeStyle = 'rgba(20,40,80,0.85)';
-        ctx.strokeText(e.text, e.x, e.y);
+        ctx.strokeText(e.text, 0, 0);
         ctx.fillStyle = e.color;
-        ctx.fillText(e.text, e.x, e.y);
+        ctx.fillText(e.text, 0, 0);
+        ctx.restore();
       }
     }
     ctx.restore();

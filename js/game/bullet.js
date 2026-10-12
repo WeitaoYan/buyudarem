@@ -46,6 +46,35 @@ export default class Bullet extends Sprite {
 
   render(ctx) {
     if (!this.visible) return;
+
+    // 发光拖尾（沿速度反方向渐隐）
+    const tx = -this.vx / 1200;
+    const ty = -this.vy / 1200;
+    const trailLen = this.kind === 'normal' ? 46 : 70;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    const trailColors = {
+      normal: ['rgba(160,220,255,0.55)', 'rgba(160,220,255,0)'],
+      heavy: ['rgba(255,140,90,0.6)', 'rgba(255,90,60,0)'],
+      rage: ['rgba(255,214,64,0.65)', 'rgba(255,214,64,0)'],
+    };
+    const tc = trailColors[this.kind] || trailColors.normal;
+    const tg = ctx.createLinearGradient(0, 0, tx * trailLen, ty * trailLen);
+    tg.addColorStop(0, tc[0]);
+    tg.addColorStop(1, tc[1]);
+    ctx.fillStyle = tg;
+    ctx.beginPath();
+    const tw = this.radius * 0.9;
+    const px = -ty * tw;
+    const py = tx * tw;
+    ctx.moveTo(px, py);
+    ctx.lineTo(tx * trailLen + px * 0.2, ty * trailLen + py * 0.2);
+    ctx.lineTo(tx * trailLen - px * 0.2, ty * trailLen - py * 0.2);
+    ctx.lineTo(-px, -py);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
     ctx.save();
     ctx.translate(this.x, this.y);
 

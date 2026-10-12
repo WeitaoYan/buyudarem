@@ -144,9 +144,17 @@ export default class Main {
     if (!db.goldenTriggered && db.elapsed >= GOLDEN_TIME_START) {
       db.goldenTimer = GOLDEN_TIME_DURATION;
       db.goldenTriggered = true;
+      GameGlobal.effects.spawnPopup('黄金时刻!', '#ffae00', 76);
     }
     if (db.goldenTimer > 0) db.goldenTimer -= dt;
     if (db.rageTimer > 0) db.rageTimer -= dt;
+
+    // 冲刺阶段播报
+    if (!db.sprintTriggered && db.elapsed >= SPRINT_TIME) {
+      db.sprintTriggered = true;
+      GameGlobal.effects.spawnPopup('最终冲刺!', '#7fd8ff', 76);
+      db.shake = Math.max(db.shake, 10);
+    }
 
     this.spawner.update(dt);
     this.cannon.update(dt);
@@ -212,8 +220,14 @@ export default class Main {
     const db = GameGlobal.databus;
     const gain = Math.round(fish.score * db.scoreMulti);
     db.score += gain;
+    db.caught++;
     this.combo.onCatch();
-    GameGlobal.effects.spawnCatch(fish, gain);
+    if (fish.isBoss) {
+      GameGlobal.effects.spawnBossKill(fish.x, fish.y, fish.cfg.name, gain);
+      db.shake = Math.max(db.shake, 16);
+    } else {
+      GameGlobal.effects.spawnCatch(fish, gain);
+    }
     GameGlobal.audio.playCatch();
     if (fish.isBoss && wx.vibrateShort) wx.vibrateShort({ type: 'heavy' });
     fish.remove();

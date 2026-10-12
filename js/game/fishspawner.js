@@ -56,6 +56,8 @@ export default class FishSpawner {
       db.bossIndex++;
       db.bossTriggered = true;
       db.bossSpawned = true;
+      GameGlobal.effects.spawnPopup(`${FISH_CONFIG[item.key].name} 来袭!`, '#ff5d5d', 68);
+      db.shake = Math.max(db.shake, 12);
     }
 
     // 冲刺阶段：全屏鱼潮

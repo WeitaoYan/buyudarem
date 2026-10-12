@@ -129,6 +129,7 @@ export default class PowerupSystem {
     }
 
     GameGlobal.effects.spawnPowerupFx(cfg.fx, cfg.color, powerup.x, powerup.y);
+    GameGlobal.effects.spawnPopup(`${cfg.name}!`, cfg.color, 72);
     db.shake = Math.max(db.shake, cfg.power * 3);
     GameGlobal.audio.playCatch();
     if (wx.vibrateShort) wx.vibrateShort({ type: cfg.power >= 4 ? 'heavy' : 'medium' });

@@ -22,9 +22,16 @@ export default class ComboSystem {
       GameGlobal.cannon.setLevel(target);
     }
 
+    // 连击里程碑弹幕
+    if (db.combo === 10 || db.combo === 20 || db.combo === 40 || db.combo === 60) {
+      GameGlobal.effects.spawnPopup(`连击 ×${db.combo}!`, '#ffd76a', 60);
+    }
+
     // 触发狂暴
     if (db.combo === RAGE_COMBO) {
       db.rageTimer = RAGE_DURATION;
+      GameGlobal.effects.spawnPopup('狂暴模式!', '#ff5d5d', 84);
+      GameGlobal.databus.shake = Math.max(GameGlobal.databus.shake, 14);
     }
   }
 

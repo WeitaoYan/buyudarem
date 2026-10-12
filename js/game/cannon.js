@@ -95,6 +95,7 @@ export default class Cannon extends Sprite {
     }
     this.recoil = 1;
     this.muzzleFlash = 1;
+    GameGlobal.effects.spawnMuzzle(this.muzzleX, this.muzzleY);
     GameGlobal.audio.playShoot();
   }
 

@@ -25,6 +25,7 @@ export default class DataBus {
     this.frame = 0;
     this.elapsed = 0;
     this.score = 0;
+    this.caught = 0;
     this.combo = 0;
     this.maxCombo = 0;
     this.comboTimer = 0;
@@ -36,6 +37,7 @@ export default class DataBus {
     // 事件触发标记
     this.schoolTriggered = false;
     this.goldenTriggered = false;
+    this.sprintTriggered = false;
     this.bossTriggered = false;
     this.bossSpawned = false;
     this.bossIndex = 0;
