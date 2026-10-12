@@ -116,7 +116,16 @@ export default class Main {
 
       if (this.adShowing) return; // 广告播放中不响应
       if (db.state === STATE_READY) {
-        this.requestStartWithAd(x, y);
+        if (this.ui.hitSkipAd(x, y)) {
+          // 跳过广告直接开始：无开局特效
+          this.startGame();
+          this.cannon.isFiring = true;
+          this.cannon.setAim(x, y);
+          GameGlobal.audio.startBgm();
+        } else {
+          // 点广告按钮或任意处：看完广告随机得一个开局特效
+          this.requestStartWithAd(x, y);
+        }
       } else if (db.state === STATE_PLAYING) {
         if (this.ui.hitHome(x, y)) {
           this.goHome();

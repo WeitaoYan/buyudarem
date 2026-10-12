@@ -568,15 +568,35 @@ export default class UI {
     ctx.stroke();
     ctx.restore();
     button(ctx, btnX, btnY, btnW, btnH, '看广告开始', { primary: true, fontSize: 52, glow: 18 + pulse * 14 });
+    this.adStartBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
+
+    // 跳过广告直接开始（无开局特效）
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '30px sans-serif';
+    const skipText = '跳过广告，直接开始';
+    const skipW = ctx.measureText(skipText).width + 80;
+    const skipY = VIEW_HEIGHT * 0.80;
+    ctx.fillStyle = 'rgba(220,240,255,0.75)';
+    ctx.fillText(skipText, cx, skipY);
+    ctx.strokeStyle = 'rgba(220,240,255,0.35)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - skipW / 2 + 40, skipY + 22);
+    ctx.lineTo(cx + skipW / 2 - 40, skipY + 22);
+    ctx.stroke();
+    ctx.restore();
+    this.skipAdBtn = { x: cx - skipW / 2, y: skipY - 34, w: skipW, h: 68 };
 
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const a = 0.55 + 0.35 * Math.sin(now / 500);
     ctx.globalAlpha = a;
-    ctx.font = '30px sans-serif';
-    ctx.fillStyle = '#dcefff';
-    ctx.fillText('点击任意处看广告 · 开局随机特效', cx, VIEW_HEIGHT * 0.80);
+    ctx.font = '26px sans-serif';
+    ctx.fillStyle = '#9fc3e2';
+    ctx.fillText('点击任意处看广告 · 开局随机特效', cx, VIEW_HEIGHT * 0.855);
     ctx.restore();
   }
 
@@ -791,6 +811,18 @@ export default class UI {
 
   hitHome(x, y) {
     const b = this.homeBtn;
+    return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+  }
+
+  hitAdStart(x, y) {
+    const b = this.adStartBtn;
+    if (!b) return false;
+    return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+  }
+
+  hitSkipAd(x, y) {
+    const b = this.skipAdBtn;
+    if (!b) return false;
     return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
   }
 }
