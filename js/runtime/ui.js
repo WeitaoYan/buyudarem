@@ -274,12 +274,10 @@ export default class UI {
     const cur = CANNON_LEVELS[db.level - 1];
     const next = CANNON_LEVELS[db.level] || null;
     let prog = 1;
-    let nextAt = '';
     if (next) {
       const from = cur.reqCombo;
       const to = next.reqCombo;
       prog = clamp01((db.combo - from) / (to - from));
-      nextAt = `${to - db.combo}`;
     }
 
     ctx.save();
@@ -309,23 +307,12 @@ export default class UI {
     }
     ctx.restore();
 
-    // 下一级提示
-    if (next) {
-      ctx.save();
-      ctx.font = '24px sans-serif';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(220,240,255,0.85)';
-      ctx.fillText(`再 ${nextAt} 连击升级`, x + w - 6, ty + th + 18);
-      ctx.restore();
-    }
-
     // 连击维持倒计时细条（2 秒窗口可视化）
     if (db.combo > 0) {
       const ww = w * clamp01(db.comboTimer / COMBO_TIMEOUT);
       ctx.save();
       ctx.fillStyle = 'rgba(127,216,255,0.85)';
-      roundRect(ctx, x, ty + th + 6, Math.max(4, ww), 5, 2.5);
+      roundRect(ctx, x, ty + th + 8, Math.max(4, ww), 5, 2.5);
       ctx.fill();
       ctx.restore();
     }
@@ -427,8 +414,9 @@ export default class UI {
     ctx.font = 'bold 34px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const tw = ctx.measureText(`${text} ${timer.toFixed(1)}s`).width;
-    const w = tw + 130;
+    const timerText = `${timer.toFixed(1)}s`;
+    const tw = ctx.measureText(timerText).width;
+    const w = tw + 116;
     const h = 64;
     const x = VIEW_WIDTH / 2 - w / 2;
 
@@ -454,11 +442,12 @@ export default class UI {
     else if (icon === 'flame') flameIcon(ctx, x + 40, y + h / 2, 38);
     else boltIcon(ctx, x + 40, y + h / 2, 36);
 
-    outlineText(ctx, text, VIEW_WIDTH / 2 - 10, y + h / 2 + 1, 32, '#ffffff');
-    ctx.font = 'bold 32px sans-serif';
+    // 仅保留带颜色的倒计时
+    ctx.font = 'bold 34px sans-serif';
     ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
     ctx.fillStyle = color;
-    ctx.fillText(`${timer.toFixed(1)}s`, VIEW_WIDTH / 2 + tw / 2 - 52, y + h / 2 + 1);
+    ctx.fillText(timerText, x + 70, y + h / 2 + 1);
     ctx.restore();
   }
 
