@@ -24,6 +24,7 @@ import {
   trophyIcon,
   boltIcon,
   homeIcon,
+  videoIcon,
   waveLine,
   softGlow,
 } from './theme';
@@ -567,8 +568,14 @@ export default class UI {
     roundRect(ctx, btnX - 10 - pulse * 8, btnY - 10 - pulse * 8, btnW + 20 + pulse * 16, btnH + 20 + pulse * 16, (btnH + 20) / 2);
     ctx.stroke();
     ctx.restore();
-    button(ctx, btnX, btnY, btnW, btnH, '看广告开始', { primary: true, fontSize: 52, glow: 18 + pulse * 14 });
+    button(ctx, btnX, btnY, btnW, btnH, '增强开始游戏', { primary: true, fontSize: 52, glow: 18 + pulse * 14 });
     this.adStartBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
+
+    // 视频图标：暗示需要看广告
+    ctx.save();
+    ctx.globalAlpha = 0.75 + pulse * 0.25;
+    videoIcon(ctx, btnX + btnW + 52, btnY + btnH / 2, 58);
+    ctx.restore();
 
     // 跳过广告直接开始（无开局特效）
     ctx.save();
@@ -588,16 +595,6 @@ export default class UI {
     ctx.stroke();
     ctx.restore();
     this.skipAdBtn = { x: cx - skipW / 2, y: skipY - 34, w: skipW, h: 68 };
-
-    ctx.save();
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const a = 0.55 + 0.35 * Math.sin(now / 500);
-    ctx.globalAlpha = a;
-    ctx.font = '26px sans-serif';
-    ctx.fillStyle = '#9fc3e2';
-    ctx.fillText('点击任意处看广告 · 开局随机特效', cx, VIEW_HEIGHT * 0.855);
-    ctx.restore();
   }
 
   // ================= 结算页 =================

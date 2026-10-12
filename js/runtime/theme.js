@@ -296,6 +296,29 @@ export function homeIcon(ctx, cx, cy, s, color = '#ffffff') {
   ctx.restore();
 }
 
+/** 视频/广告图标：圆角播放框 + 播放三角 */
+export function videoIcon(ctx, cx, cy, s, color = '#ffd76a') {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(s / 40, s / 40);
+  // 播放框
+  ctx.fillStyle = 'rgba(6,20,40,0.72)';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  roundRect(ctx, -19, -14, 38, 28, 7);
+  ctx.fill();
+  ctx.stroke();
+  // 播放三角
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(-5, -8);
+  ctx.lineTo(9, 0);
+  ctx.lineTo(-5, 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
 /** 波浪装饰线 */
 export function waveLine(ctx, cx, y, w, amp, color, lw = 4, phase = 0) {
   ctx.save();

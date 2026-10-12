@@ -122,10 +122,11 @@ export default class Main {
           this.cannon.isFiring = true;
           this.cannon.setAim(x, y);
           GameGlobal.audio.startBgm();
-        } else {
-          // 点广告按钮或任意处：看完广告随机得一个开局特效
+        } else if (this.ui.hitAdStart(x, y)) {
+          // 点增强开始按钮：看完广告随机得一个开局特效
           this.requestStartWithAd(x, y);
         }
+        // 其他区域不响应
       } else if (db.state === STATE_PLAYING) {
         if (this.ui.hitHome(x, y)) {
           this.goHome();
