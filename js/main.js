@@ -5,11 +5,13 @@ import {
   GOLDEN_TIME_START,
   GOLDEN_TIME_DURATION,
   SPRINT_TIME,
+  POWERUP_CONFIG,
 } from './config';
 import DataBus, { STATE_READY, STATE_PLAYING, STATE_RESULT } from './databus';
 import Background from './runtime/background';
 import UI from './runtime/ui';
 import AudioManager from './runtime/audio';
+import { showRewardedAd, pickOpeningBuff } from './runtime/ad';
 import Cannon from './game/cannon';
 import FishSpawner from './game/fishspawner';
 import ComboSystem from './game/combo';
@@ -36,6 +38,7 @@ export default class Main {
 
     this.lastTime = 0;
     this.aniId = 0;
+    this.adShowing = false; // 激励广告播放中，忽略触摸
 
     this.initEvent();
     this.startLoop();
@@ -70,6 +73,38 @@ export default class Main {
     GameGlobal.effects.reset();
   }
 
+  // ---------- 开局：先看激励广告，看完随机获得一个开局特效 ----------
+  requestStartWithAd(x, y) {
+    if (this.adShowing) return;
+    this.adShowing = true;
+    showRewardedAd({
+      onReward: () => {
+        this.adShowing = false;
+        this.startGameWithBuff(x, y);
+      },
+      onCancel: () => {
+        this.adShowing = false;
+        GameGlobal.effects.spawnPopup('看完广告可获得开局特效', '#dcefff', 40);
+      },
+    });
+  }
+
+  // 广告看完：正式开局并挂上随机特效
+  startGameWithBuff(x, y) {
+    this.startGame();
+    const db = GameGlobal.databus;
+    const { key, duration } = pickOpeningBuff();
+    const cfg = POWERUP_CONFIG[key];
+    db.buffs[key] = duration;
+    GameGlobal.effects.spawnPowerupFx(cfg.fx, cfg.color, VIEW_WIDTH / 2, VIEW_HEIGHT * 0.38);
+    GameGlobal.effects.spawnPopup(`开局特效：${cfg.name}！`, cfg.color, 72);
+    if (typeof x === 'number') {
+      this.cannon.isFiring = true;
+      this.cannon.setAim(x, y);
+    }
+    GameGlobal.audio.startBgm();
+  }
+
   // ---------- 输入 ----------
   initEvent() {
     wx.onTouchStart((e) => {
@@ -79,11 +114,9 @@ export default class Main {
       const y = toDesignY(t.clientY);
       const db = GameGlobal.databus;
 
+      if (this.adShowing) return; // 广告播放中不响应
       if (db.state === STATE_READY) {
-        this.startGame();
-        this.cannon.isFiring = true;
-        this.cannon.setAim(x, y);
-        GameGlobal.audio.startBgm();
+        this.requestStartWithAd(x, y);
       } else if (db.state === STATE_PLAYING) {
         if (this.ui.hitHome(x, y)) {
           this.goHome();

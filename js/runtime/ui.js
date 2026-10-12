@@ -567,7 +567,7 @@ export default class UI {
     roundRect(ctx, btnX - 10 - pulse * 8, btnY - 10 - pulse * 8, btnW + 20 + pulse * 16, btnH + 20 + pulse * 16, (btnH + 20) / 2);
     ctx.stroke();
     ctx.restore();
-    button(ctx, btnX, btnY, btnW, btnH, '开始游戏', { primary: true, fontSize: 52, glow: 18 + pulse * 14 });
+    button(ctx, btnX, btnY, btnW, btnH, '看广告开始', { primary: true, fontSize: 52, glow: 18 + pulse * 14 });
 
     ctx.save();
     ctx.textAlign = 'center';
@@ -576,7 +576,7 @@ export default class UI {
     ctx.globalAlpha = a;
     ctx.font = '30px sans-serif';
     ctx.fillStyle = '#dcefff';
-    ctx.fillText('点击任意处开始 · 60 秒冲高分', cx, VIEW_HEIGHT * 0.80);
+    ctx.fillText('点击任意处看广告 · 开局随机特效', cx, VIEW_HEIGHT * 0.80);
     ctx.restore();
   }
 
